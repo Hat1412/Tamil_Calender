@@ -3,127 +3,245 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<style>
-    body {
-        background: radial-gradient(#550055, #000);
-        border: white;
-        border-style: solid;
-    }
-
-    h1 {
-        width: 100%;
-        font-size: 180px;
-        background: #000000;
-        text-align: center;
-        color: aliceblue;
-        font-family: 'Arial';
-    }
-
-    #count-down {
-        font-size: 170px;
-    }
-
-    img {
-        width: 25%;
-        padding-left: 30px;
-        padding-right: 30px;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-</style>
+    <title>Home Clock</title>
 
 
-<body>
-    <center>
-        <h1 id="time"></h1>
-        <img src="1_idol.png"></img>
-        <img style="padding-bottom: 80px; width: 35%" id="center-image"></img>
-        <img src="2_idol.png"></img>
-        <h1 id="new_time"></h1>
-        <!-- <script src="moment.js"></script> -->
-    </center>
-</body>
-<script>
-    months = {
-        0: "Jan",
-        1: "Feb",
-        2: "March",
-        3: "Apr",
-        4: "May",
-        5: "June",
-        6: "July",
-        7: "Aug",
-        8: "Sept",
-        9: "Oct",
-        10: "Nov",
-        11: "Dec",
-    }
-
-
-function currentTime() {
-    let date = new Date();
-
-    // Convert to Indian Standard Time
-    let istDate = convertTZ(date, "Asia/Kolkata");
-
-    document.getElementById("time").innerHTML = convert_Time(istDate);
-
-    setTimeout(currentTime, 1000);
-}
-currentTime();
-
-    function convertTZ(date, tzString) {
-        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-    }
-    function convert_Time(date) {
-        let hh = date.getHours();
-        let mm = date.getMinutes();
-        let ss = date.getSeconds();
-        let session = "AM";
-
-        if (hh == 0) { hh = 12 }
-        if (hh > 12) { hh = hh - 12; session = "PM"; }
-
-        hh = (hh < 10) ? "0" + hh : hh;
-        mm = (mm < 10) ? "0" + mm : mm;
-        ss = (ss < 10) ? "0" + ss : ss;
-
-        let time = `${date.getDate()} ${months[date.getMonth()]} ${hh} : ${mm} : ${ss} ${session}`
-        return time
-    }
-    function CurrentDate() {
-        date1 = new Date();
-        year = date1.getFullYear();
-        month = (date1.getMonth() < 9) ? "0" + (date1.getMonth() + 1) : (date1.getMonth() + 1);
-        date = (date1.getDate() < 10) ? "0" + date1.getDate() : date1.getDate();
-
-        link = `https://www.prokerala.com/general/calendar/imgs/daily/${year}-${month}-${date}.png`
-        // link = `https://srirangaminfo.com/cal/2024/1002.jpg`
-
-        document.getElementById("center-image").src = link
-
-        setTimeout(function () { CurrentDate() }, 1000 * 2);
-    }
-    function load_countdown() {
-        function datediff(first, second) {
-            return Math.round((second - first) / (1000 * 60 * 60 * 24));
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        Final_result = datediff(new Date(`${year}/${month}/${date}`), new Date("2024/01/25"))
-        document.getElementById("count-down").innerText = `${Final_result} Days Remaining `
-        setTimeout(function () { load_countdown() }, 1000 * 2);
+        /* ---------- BODY & THEMES ---------- */
 
-    }
+        body {
+            height: 100vh;
+            font-family: Helvetica;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: background 2s ease;
+        }
 
-    CurrentDate();
+        /* Morning: warm sunrise */
+        body.morning {
+            background: radial-gradient(circle at top, #fff3d6, #f2a65a);
+        }
 
-</script>
+        /* Evening / Night: diya glow */
+        body.evening {
+            background: radial-gradient(circle at bottom, #2a002e, #09000c);
+        }
 
+        /* Soft vignette */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 55%, rgba(0, 0, 0, 0.3));
+        }
+
+        /* Diya glow (evening only) */
+        body.evening::before {
+            content: "";
+            position: fixed;
+            bottom: -120px;
+            left: 50%;
+            width: 650px;
+            height: 650px;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.18), transparent 70%);
+            animation: glow 7s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                opacity: 0.6;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ---------- LAYOUT ---------- */
+
+        .container {
+            width: 100%;
+            height: 90%;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            text-align: center;
+            color: #1a1a1a;
+        }
+
+        body.evening .container {
+            color: #f4eee8;
+        }
+
+        /* ---------- TIME ---------- */
+
+        #time {
+            font-family: 'Playfair Display', serif;
+            font-size: 9rem;
+            font-weight: 500;
+            letter-spacing: 3px;
+            margin-top: 30px;
+        }
+
+        /* Decorative divider */
+        .divider {
+            width: 280px;
+            height: 2px;
+            margin: 18px auto 0;
+            background: linear-gradient(to right,
+                    transparent,
+                    rgba(255, 255, 255, 0.65),
+                    transparent);
+        }
+
+        /* ---------- CENTER IMAGES ---------- */
+
+        .center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+        }
+
+        .side-img {
+            width: 22%;
+            opacity: 0.9;
+        }
+
+        #center-image {
+            width: 34%;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            animation: breathe 7s ease-in-out infinite;
+        }
+
+        /* Subtle breathing motion */
+        @keyframes breathe {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.015);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Extra diya warmth in evening */
+        body.evening #center-image {
+            box-shadow:
+                0 0 25px rgba(255, 140, 0, 0.45),
+                0 0 70px rgba(255, 94, 0, 0.25);
+        }
+
+        /* ---------- FOOTER ---------- */
+
+        .footer {
+            font-size: 1.05rem;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- TIME -->
+        <div>
+            <div id="time">--:--:--</div>
+            <div class="divider"></div>
+        </div>
+
+        <!-- IMAGES -->
+        <div class="center">
+            <img src="1_idol.png" class="side-img">
+            <img id="center-image">
+            <img src="2_idol.png" class="side-img">
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Indian Standard Time
+        </div>
+
+    </div>
+
+    <script>
+        /* ---------- TIMEZONE ---------- */
+
+        function IST() {
+            return new Date(
+                new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+            );
+        }
+
+        /* ---------- THEME SWITCH ---------- */
+
+        function updateTheme(hour) {
+            document.body.className = (hour >= 6 && hour < 18)
+                ? "morning"
+                : "evening";
+        }
+
+        /* ---------- TIME UPDATE ---------- */
+
+        function updateTime() {
+            const now = IST();
+            updateTheme(now.getHours());
+
+            let hh = now.getHours();
+            let mm = now.getMinutes();
+            let ss = now.getSeconds();
+            let session = hh >= 12 ? "PM" : "AM";
+
+            hh = hh % 12 || 12;
+            hh = hh < 10 ? "0" + hh : hh;
+            mm = mm < 10 ? "0" + mm : mm;
+            ss = ss < 10 ? "0" + ss : ss;
+
+            document.getElementById("time").innerHTML =
+                `${hh}:${mm}:${ss} ${session}`;
+
+            setTimeout(updateTime, 1000);
+        }
+
+        /* ---------- CALENDAR IMAGE ---------- */
+
+        function updateCalendar() {
+            const now = IST();
+
+            let y = now.getFullYear();
+            let m = String(now.getMonth() + 1).padStart(2, '0');
+            let d = String(now.getDate()).padStart(2, '0');
+
+            document.getElementById("center-image").src =
+                `https://www.prokerala.com/general/calendar/imgs/daily/${y}-${m}-${d}.png`;
+
+            setTimeout(updateCalendar, 60000);
+        }
+
+        /* ---------- START ---------- */
+
+        updateTime();
+        updateCalendar();
+    </script>
+
+</body>
 
 </html>
-
