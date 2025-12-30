@@ -67,14 +67,14 @@
 
     function currentTime() {
         let date = new Date();
-        var date2 = convertTZ(date, "America/Chicago")
-        document.getElementById("time").innerHTML = `${convert_Time(date)}`
-        // document.getElementById("new_time").innerHTML = ` ${convert_Time(date2)}`
 
+        // Convert to Indian Standard Time
+        let istDate = convertTZ(date, "Asia/Kolkata");
 
-        setTimeout(function () { currentTime() }, 1000);
+        document.getElementById("time").innerHTML = convert_Time(istDate);
+
+        setTimeout(currentTime, 1000);
     }
-
     currentTime();
 
     function convertTZ(date, tzString) {
@@ -125,6 +125,3 @@
 </script>
 
 </html>
-
-
-
