@@ -96,19 +96,42 @@
         let time = `${date.getDate()} ${months[date.getMonth()]} ${hh} : ${mm} : ${ss} ${session}`
         return time
     }
-    function CurrentDate() {
-        date1 = new Date();
-        year = date1.getFullYear();
-        month = (date1.getMonth() < 9) ? "0" + (date1.getMonth() + 1) : (date1.getMonth() + 1);
-        date = (date1.getDate() < 10) ? "0" + date1.getDate() : date1.getDate();
 
-        link = `https://www.prokerala.com/general/calendar/imgs/daily/${year}-${month}-${date}.png`
-        // link = `https://srirangaminfo.com/cal/2024/1002.jpg`
-
-        document.getElementById("center-image").src = link
-
-        setTimeout(function () { CurrentDate() }, 1000 * 2);
+    function getISTDate() {
+        return new Date(
+            new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+        );
     }
+
+    function updateCalendarImage() {
+        const ist = getISTDate();
+
+        const year = ist.getFullYear();
+        const month = String(ist.getMonth() + 1).padStart(2, "0");
+        const date = String(ist.getDate()).padStart(2, "0");
+
+        const link = `https://www.prokerala.com/general/calendar/imgs/daily/${year}-${month}-${date}.png`;
+        document.getElementById("center-image").src = link;
+
+        scheduleNextMidnightRefresh();
+    }
+
+    function scheduleNextMidnightRefresh() {
+        const now = getISTDate();
+        const nextMidnight = new Date(now);
+
+        nextMidnight.setHours(24, 0, 5, 0); // 12:00:05 AM IST (safe buffer)
+
+        const msUntilMidnight = nextMidnight - now;
+
+        setTimeout(() => {
+            updateCalendarImage();
+            setInterval(updateCalendarImage, 24 * 60 * 60 * 1000);
+        }, msUntilMidnight);
+    }
+
+    updateCalendarImage();
+
     function load_countdown() {
         function datediff(first, second) {
             return Math.round((second - first) / (1000 * 60 * 60 * 24));
