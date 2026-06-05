@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Noto+Sans+Tamil:wght@700&display=swap"
+        rel="stylesheet">
+    <title>Tamil Daily Calendar</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: black;
+            font-family: 'Poppins', 'Noto Sans Tamil', sans-serif;
+            font-weight: 800;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Verdana', serif;
+            font-weight: 900;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            flex-shrink: 0;
+            height: 18vh;
+            padding: 0 30px;
+        }
+
+        #date-display {
+            font-size: clamp(50px, 20vw, 100px);
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 3px;
+            white-space: nowrap;
+            background-color: #000;
+        }
+
+        .hbar {
+            width: 6px;
+            height: 70px;
+            background: #4a80e0;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        #time-display {
+            font-size: clamp(50px, 20vw, 100px);
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 6px;
+            white-space: nowrap;
+            min-width: 320px;
+            text-align: center;
+            background-color: #000;
+        }
+
+        /* ── MAIN ROW ── */
+        .main-row {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        /* calendar loading state */
+        .cal-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .cal-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #2a5abf;
+            border-top-color: #ffe060;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .cal-msg {
+            font-size: clamp(18px, 2.2vw, 30px);
+            font-weight: 900;
+            color: #7aaae0;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        #cal-img {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .footer {
+            height: 16vh;
+            /* was 13vh */
+            padding: 0 40px;
+            gap: 30px;
+        }
+
+        .footer-tag {
+            font-size: clamp(26px, 3vw, 44px);
+            letter-spacing: 4px;
+        }
+
+        .footer-sep {
+            font-size: clamp(28px, 3.5vw, 50px);
+        }
+
+        #events-display {
+            font-size: clamp(36px, 4.5vw, 70px);
+            font-weight: 900;
+            color: #ffe060;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        #events-display.no-event {
+            font-size: clamp(28px, 3vw, 44px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div id="date-display">Loading…</div>
+        <div class="hbar"></div>
+        <div id="time-display">--:--:-- --</div>
+    </div>
+
+    <div class="main-row">
+
+        <!-- LEFT: local 1_idol.png -->
+        <div class="panel">
+            <img src="1_idol.png" alt="Idol">
+        </div>
+
+        <!-- CENTER: Tamil Daily Calendar-->
+        <div class="panel" id="panel-cal">
+            <img id="cal-img" alt="Tamil Daily Calendar">
+        </div>
+
+        <!-- RIGHT: local image_2.png -->
+        <div class="panel">
+            <img src="2_idol.png" alt="Image 2">
+        </div>
+
+    </div>
+
+    <!-- FOOTER: SPECIAL EVENTS -->
+    <div class="footer">
+        <center>
+            <span id="events-display" class="no-event">No special events today</span>
+        </center>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════════════
+        //  SPECIAL EVENTS  —  edit/add entries freely
+        //  Format:  "DD/MM": "Event text"
+        // ════════════════════════════════════════════════════
+        const SPECIAL_EVENTS = {
+
+            "01/01": "New Year's Day  ·  புத்தாண்டு",
+            "26/01": "Republic Day  ·  குடியரசு தினம்",
+            "01/05": "Labour Day  ·  தொழிலாளர் தினம்",
+            "25/12": "Christmas  ·  கிறிஸ்துமஸ்",
+            "31/12": "New Year's Eve  ·  புத்தாண்டு நள்ளிரவு",
+            "02/10": "Gandhi Jayanti  ·  காந்தி ஜெயந்தி",
+            "15/08": "Independence Day  ·  சுதந்திர தினம்",
+            "14/01": "Bhogi  ·  போகி",
+            "15/01": "Thai Pongal  ·  தை பொங்கல்",
+            "16/01": "Mattu Pongal  ·  மாட்டு பொங்கல்",
+            "04/02": "Thaipusam  ·  தைப்பூசம்",
+            "08/03": "Maha Shivaratri  ·  மகா சிவராத்திரி",
+            "14/04": "Tamil New Year  ·  தமிழ் புத்தாண்டு",
+            "22/04": "Akshaya Tritiya  ·  அட்சய திருதியை",
+            "23/04": "Hanuman Jayanti  ·  ஆஞ்சநேயர் ஜெயந்தி",
+            "28/05": "Eid al-Adha  ·  பக்ரீத்",
+            "30/05": "Vaikasi Visakam  ·  வைகாசி விசாகம்",
+            "03/08": "Aadi Perukku  ·  ஆடி பெருக்கு",
+            "26/08": "Onam  ·  ஓணம்",
+            "27/08": "Yajur Uparkarma  ·  யஜூர் உபர்கர்மம்",
+            "28/08": "Raksha Bandhan  ·  ரக்ஷா பந்தன்",
+            "19/10": "Saraswati Puja  ·  சரஸ்வதி பூஜை",
+            "04/09": "Krishna Jayanthi  ·  கிருஷ்ண ஜெயந்தி",
+            "14/09": "Ganesh Chaturthi  ·  கணேஷ் சதுர்த்தி",
+            "20/10": "Vijayadasami  ·  விஜயதசமி",
+            "08/11": "Deepavali  ·  தீபாவளி",
+            "24/11": "Karthigai Deepam  ·  கார்த்திகை தீபம்",
+            "15/11": "Skanda Sashti  ·  சண்முக சஷ்டி",
+            "10/10": "Mahalaya Amavasai  ·  மகாளய அமாவாசை",
+        };
+
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function updateClock() {
+            const now = new Date();
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            const dd = pad(now.getDate());
+            const mm = pad(now.getMonth() + 1);
+            const yyyy = now.getFullYear();
+
+            let h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+
+            document.getElementById('date-display').textContent =
+                `${days[now.getDay()]}`;
+
+            document.getElementById('time-display').textContent =
+                `${pad(h)}:${pad(m)}:${pad(s)} ${ampm}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function updateEventDisplay() {
+            const now = new Date();
+            const todayKey =
+                pad(now.getDate()) + '/' + pad(now.getMonth() + 1);
+
+            const el = document.getElementById('events-display');
+
+            // If TODAY event  show only event
+            if (SPECIAL_EVENTS[todayKey]) {
+                el.textContent = SPECIAL_EVENTS[todayKey];
+                el.style.color = '#ffe060';
+                el.className = "";
+                return;
+            }
+
+            // find next upcoming event
+            let upcoming = [];
+
+            for (let key in SPECIAL_EVENTS) {
+                const [d, m] = key.split('/');
+                let eventDate = new Date(now.getFullYear(), m - 1, d);
+
+                if (eventDate < now) { eventDate.setFullYear(now.getFullYear() + 1); } upcoming.push({
+                    date: eventDate, name:
+                        SPECIAL_EVENTS[key]
+                });
+            } upcoming.sort((a, b) => a.date - b.date);
+            const next = upcoming[0];
+
+            const diff = next.date - now;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            const secs = Math.floor((diff / 1000) % 60);
+
+            el.textContent =
+                `${next.name} in ${days}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`;
+            el.style.color = '#7aaae0';
+            el.className = "";
+        }
+
+        // run every second
+        setInterval(updateEventDisplay, 1000);
+        updateEventDisplay();
+
+        function updateCalendarImage() {
+            const now = new Date(
+                new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+            );
+            now.setHours(now.getDay() + 15); // IST is UTC+5:30
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, "0");
+            const d = String(now.getDate());
+
+            if (now.getDate() > 10) {
+                const d = String(now.getDate()).padStart(2, "0");
+            } else {
+                const d = String(now.getDate());
+            }
+
+            const url = `${d}${m}${y}.jpg`;
+            console.log(url)
+            const img = document.getElementById("cal-img");
+
+            img.src = url;
+            img.style.display = "block";
+
+            img.onerror = () => {
+                img.style.display = "none";
+            };
+        }
+
+        // load once
+        updateCalendarImage();
+
+        // reload page at midnight
+        setTimeout(() => location.reload(), (() => {
+            const now = new Date();
+            const next = new Date();
+            next.setHours(24, 0, 5, 0);
+            return next - now;
+        })());
+    </script>
+</body>
+
+</html>
